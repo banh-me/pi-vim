@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2025-present pi-vim contributors
+Copyright (c) 2025-present banh-me
 
 Copyright for the vim-mode engine (state.ts, text-core.ts, handler.ts cores)
 is held by leohenon, ported from:
