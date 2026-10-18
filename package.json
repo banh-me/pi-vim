@@ -30,7 +30,9 @@
       "./extension/index.ts"
     ]
   },
-  "scripts": {
-    "typecheck": "tsc --noEmit"
+  "author": "banh-me",
+  "peerDependencies": {
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*"
   }
 }
