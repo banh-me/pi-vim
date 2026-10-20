@@ -11,6 +11,7 @@ permissions:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    environment: release
     steps:
       - uses: actions/checkout@v7
 
@@ -21,17 +22,11 @@ jobs:
           # Never cache in a release build.
           package-manager-cache: false
 
-      # This package has no dependencies of its own: it imports the host
-      # packages as peers, which pi supplies at runtime. Type checking needs
-      # them present. Must be a single npm install -- separate invocations
-      # prune the previously --no-save'd packages.
+      - name: Install devDependencies
+        run: npm ci --ignore-scripts
+
       - name: Type check
-        run: |
-          npm install --no-save --no-package-lock --no-audit --no-fund \
-            typescript@7 @types/node \
-            @earendil-works/pi-coding-agent@1.3.0 \
-            @earendil-works/pi-tui@1.3.0
-          npx tsc --noEmit
+        run: npm run typecheck
 
       - name: Verify tag matches package.json
         run: |
