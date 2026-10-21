@@ -53,7 +53,6 @@ export type VimHandlerInput = {
   editor: () => Editor;
   submit: () => void;
   openCommandPalette: () => void;
-  scroll: (action: ReturnType<typeof vimScroll>) => void;
   langmap: () => Record<string, string> | undefined;
   escapeSequence: string | null;
   onModeChanged: () => void;
@@ -928,11 +927,14 @@ export function createVimHandler(input: VimHandlerInput) {
       return true;
     }
 
-    const scroll = vimScroll(event_);
-    if (scroll) {
+    // Vim-scroll keys (ctrl+e/y/d/u/f/b) must NOT be consumed: pi owns them at
+    // the app/editor level (e.g. ctrl+e → tui.editor.cursorLineEnd or a rebound
+    // app.editor.external), and pi-vim's scroll sink is a no-op. Abort any
+    // pending operator/count like a full command would, then hand the key to
+    // pi's keybinding dispatch (same fall-through insert mode uses).
+    if (vimScroll(event_)) {
       input.state.clearPending();
-      input.scroll(scroll);
-      return true;
+      return false;
     }
 
     if (input.state.pending === "g" && !hasModifier(event_)) {
