@@ -1,5 +1,5 @@
 /**
- * Key classification helpers (scroll, jump, window-nav) and key naming,
+ * Key classification helpers (pass-through scroll keys, jump, window-nav) and key naming,
  * ported from the opencode-vim-plugin (MIT) and adapted to pi's key ids.
  */
 
@@ -17,6 +17,12 @@ export type VimKeyEvent = {
 
 export type VimScroll = "line-down" | "line-up" | "half-down" | "half-up" | "page-down" | "page-up";
 
+/**
+ * The six vim-scroll keys. pi owns them at the app/editor level (ctrl+e,
+ * ctrl+d, ctrl+u, ctrl+f, ctrl+b, ctrl+y map to pi bindings), so the dispatcher
+ * uses this only to abort pending state: these keys are handed to pi's
+ * keybinding dispatch, not consumed by vim mode.
+ */
 export function vimScroll(event: VimKeyEvent): VimScroll | undefined {
   if (!event.ctrl || event.meta || event.alt) return;
   const key = event.name;

@@ -159,7 +159,6 @@ export class VimModalEditor extends CustomEditor {
       editor: () => this,
       submit: () => this.doSubmit(),
       openCommandPalette: () => super.handleInput("/"),
-      scroll: () => {},
       langmap: () => this.vimConfig.langmap,
       escapeSequence: options.config.escapeSequence,
       onModeChanged: () => {
