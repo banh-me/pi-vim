@@ -972,7 +972,14 @@ export function createVimHandler(input: VimHandlerInput) {
         input.state.clearPending();
         clearWantedColumn();
         if (jump.action === "top") ed.setCursorOffset(editor, 0);
-        else ed.setCursorOffset(editor, Math.max(0, ed.getText(editor).length - 1));
+        else {
+          // G: very end of the buffer. When the text ends with \n the final
+          // line is empty (\n is a terminator, not a cursor position), so the
+          // bottom position is its line start == text.length — using
+          // length - 1 would land on the line above it.
+          const text = ed.getText(editor);
+          ed.setCursorOffset(editor, text.endsWith("\n") ? text.length : Math.max(0, text.length - 1));
+        }
         ed.notifyChange(editor);
       }
       return true;
