@@ -1491,6 +1491,7 @@ export function createVimHandler(input: VimHandlerInput) {
           ed.setCursorOffset(editor, Math.max(replaceStart, ed.getCursorOffset(editor) - 1));
         }
         commitInsert();
+        input.onModeChanged();
         return true;
       }
       if (isPrintable(event_) && !hasModifier(event_)) {
