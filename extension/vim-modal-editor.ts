@@ -140,6 +140,8 @@ export class VimModalEditor extends CustomEditor {
   private readonly vimState = createVimState();
   private handler!: ReturnType<typeof createVimHandler>;
   private topHiddenLineCount = 0;
+  /** Last DECSCUSR code written, so we can skip redundant writes and reset on dispose. */
+  private cursorShapeApplied: number | null = null;
 
   constructor(
     tui: TUI,
@@ -162,8 +164,8 @@ export class VimModalEditor extends CustomEditor {
       langmap: () => this.vimConfig.langmap,
       escapeSequence: options.config.escapeSequence,
       onModeChanged: () => {
-        const t = (this as unknown as { tui?: { requestRender(): void } }).tui;
-        t?.requestRender();
+        this.applyCursorShape();
+        this.tui.requestRender();
       },
       onRegisterWrite: (reg, isYank) => this.clipboard.mirror(reg, isYank),
       clipboard: { enabled: () => this.vimConfig.clipboardPolicy !== "never", get: () => this.clipboard.get() },
@@ -175,6 +177,7 @@ export class VimModalEditor extends CustomEditor {
       // (pi-vim semantics). The session closes on Esc/submit.
       this.handler.beginInsertSession();
     }
+    this.applyCursorShape();
   }
 
   get mode(): VimMode {
@@ -203,6 +206,7 @@ export class VimModalEditor extends CustomEditor {
     } else {
       this.vimState.setMode("normal");
     }
+    this.applyCursorShape();
     this.vimState.resetHistory();
     this.tui.requestRender();
   }
@@ -286,6 +290,7 @@ export class VimModalEditor extends CustomEditor {
     if (event.name === "enter" && !event.ctrl && !event.meta && !event.alt) {
       if (this.vimState.isVisual()) {
         this.vimState.setMode("normal");
+        this.applyCursorShape();
         this.tui.requestRender();
         return;
       }
@@ -331,6 +336,22 @@ export class VimModalEditor extends CustomEditor {
   }
 
   // ----- rendering -----
+
+  /** Apply the configured DECSCUSR shape for the current mode. */
+  private applyCursorShape(): void {
+    const mode = this.vimState.mode === "visual-line" ? "visualLine" : this.vimState.mode;
+    const shape = this.vimConfig.cursorShape[mode];
+    if (shape === undefined || shape === this.cursorShapeApplied) return;
+    this.cursorShapeApplied = shape;
+    this.tui.terminal.write(`\x1b[${shape} q`);
+  }
+
+  /** Restore the terminal's default cursor shape when this editor is replaced or vim is disabled. */
+  dispose(): void {
+    if (this.cursorShapeApplied === null) return;
+    this.cursorShapeApplied = null;
+    this.tui.terminal.write("\x1b[0 q");
+  }
 
   /** Capture pi's scroll offset for the selection overlay. */
   protected override renderTopBorder(

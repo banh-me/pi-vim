@@ -83,10 +83,30 @@ in there; every option has a sensible default.
       "visual": "#E67E80",       // red
       "visualLine": "#E67E80",   // red
       "replace": "#E69875"       // orange
+    },
+
+    // Terminal cursor shape per mode (DECSCUSR). Requires pi's hardware cursor:
+    // set "showHardwareCursor": true in settings.json or PI_HARDWARE_CURSOR=1.
+    // Values: "default", "block", "bar" (alias "beam"/"line"), "underline",
+    // plus blinking variants "block-blink", "bar-blink", "underline-blink".
+    // You can also use the raw DECSCUSR code 0-6. Modes you omit keep the
+    // previous shape; set a mode to null/false to unset it in a later layer.
+    // Empty (default) = pi-vim never touches the cursor shape.
+    "cursor_shape": {
+      "normal": "block",
+      "insert": "bar",
+      "replace": "underline",
+      "visual": "block",
+      "visualLine": "block"
     }
   }
 }
 ```
+
+> **Cursor shape** only works when pi's hardware cursor is visible (`showHardwareCursor: true`
+> in settings or `PI_HARDWARE_CURSOR=1`) and your terminal supports DECSCUSR (iTerm2, kitty,
+> WezTerm, foot, Alacritty, …; Apple Terminal does not). On replace/disable/shutdown pi-vim
+> restores the terminal default (`CSI 0 SP q`).
 
 ## Key reference
 

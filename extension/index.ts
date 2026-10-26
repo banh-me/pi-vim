@@ -31,7 +31,7 @@ export default function (pi: ExtensionAPI) {
         selectionStyle: style,
         notify,
       });
-      cleanupEditor = () => {};
+      cleanupEditor = () => editor.dispose();
       return editor;
     });
   }

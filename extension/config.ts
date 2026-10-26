@@ -20,6 +20,20 @@ export type VimModeColors = {
 
 export type VimClipboardPolicy = "all" | "yank" | "never";
 
+/** DECSCUSR cursor-shape code (0 = terminal default, 1-6 = blink/steady block/underline/bar). */
+export type VimCursorShape = 0 | 1 | 2 | 3 | 4 | 5 | 6;
+
+/** Per-mode cursor shapes. Omitted modes keep the shape of the previous mode. */
+export type VimCursorShapes = {
+  normal?: VimCursorShape;
+  insert?: VimCursorShape;
+  visual?: VimCursorShape;
+  visualLine?: VimCursorShape;
+  replace?: VimCursorShape;
+};
+
+type CursorShapeMode = keyof VimCursorShapes;
+
 export type VimConfig = {
   enabled: boolean;
   initialMode: VimInitialMode;
@@ -35,6 +49,8 @@ export type VimConfig = {
   /** Global pi shortcut that toggles vim mode. null = none (use /vim). */
   toggleKey: string | null;
   colors: VimModeColors;
+  /** DECSCUSR shape per mode; empty = never touch the terminal cursor shape. */
+  cursorShape: VimCursorShapes;
 };
 
 export const DEFAULT_VIM_CONFIG: VimConfig = {
@@ -48,6 +64,7 @@ export const DEFAULT_VIM_CONFIG: VimConfig = {
   escapeSequence: null,
   toggleKey: null,
   colors: {},
+  cursorShape: {},
 };
 
 const HEX_RE = /^#[0-9a-fA-F]{6}$/;
@@ -103,6 +120,60 @@ function readClipboardPolicy(value: unknown): VimClipboardPolicy | null {
   return null; // invalid → falls back to the default policy
 }
 
+/** Named DECSCUSR values. Keys are normalized to lower-case with dashes. */
+const CURSOR_SHAPE_NAMES: Record<string, VimCursorShape> = {
+  default: 0,
+  block: 2,
+  bar: 6,
+  beam: 6,
+  line: 6,
+  underline: 4,
+  "block-blink": 1,
+  "blink-block": 1,
+  "blinking-block": 1,
+  "bar-blink": 5,
+  "beam-blink": 5,
+  "line-blink": 5,
+  "blink-bar": 5,
+  "blink-beam": 5,
+  "blinking-bar": 5,
+  "blinking-beam": 5,
+  "underline-blink": 3,
+  "blink-underline": 3,
+  "blinking-underline": 3,
+};
+
+function readCursorShapeValue(value: unknown): VimCursorShape | null | undefined {
+  if (value === null || value === false) return null; // explicit "unset this mode"
+  if (typeof value === "number") {
+    return Number.isInteger(value) && value >= 0 && value <= 6
+      ? (value as VimCursorShape)
+      : undefined;
+  }
+  if (typeof value !== "string") return undefined;
+  const name = value.trim().toLowerCase().replace(/[\s_]+/g, "-");
+  return CURSOR_SHAPE_NAMES[name];
+}
+
+function readCursorShapes(value: unknown): Partial<Record<CursorShapeMode, VimCursorShape | null>> {
+  if (!isRecord(value)) return {};
+  const out: Partial<Record<CursorShapeMode, VimCursorShape | null>> = {};
+  const entries: [CursorShapeMode, string[]][] = [
+    ["normal", ["normal"]],
+    ["insert", ["insert"]],
+    ["visual", ["visual"]],
+    ["visualLine", ["visualLine", "visual_line", "visual-line"]],
+    ["replace", ["replace"]],
+  ];
+  for (const [mode, names] of entries) {
+    const raw = pick(value, ...names);
+    if (raw === undefined) continue;
+    const shape = readCursorShapeValue(raw);
+    if (shape !== undefined) out[mode] = shape;
+  }
+  return out;
+}
+
 function readColors(value: unknown): VimModeColors {
   if (!isRecord(value)) return {};
   const out: VimModeColors = {};
@@ -139,6 +210,15 @@ function applyLayer(base: VimConfig, layer: Record<string, unknown>): VimConfig 
   if (toggleKey !== undefined) cfg.toggleKey = readNonEmptyString(toggleKey);
   const colors = pick(layer, "colors");
   if (colors !== undefined) cfg.colors = { ...cfg.colors, ...readColors(colors) };
+  const cursorShape = pick(layer, "cursor_shape", "cursorShape");
+  if (cursorShape !== undefined) {
+    const next: VimCursorShapes = { ...cfg.cursorShape };
+    for (const [mode, shape] of Object.entries(readCursorShapes(cursorShape))) {
+      if (shape === null) delete next[mode as CursorShapeMode];
+      else if (shape !== undefined) next[mode as CursorShapeMode] = shape;
+    }
+    cfg.cursorShape = next;
+  }
   return cfg;
 }
 
