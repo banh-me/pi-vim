@@ -20,6 +20,25 @@ pi install npm:@banh-me/pi-vim@0.1.0
 pi install npm:@banh-me/pi-vim -l
 ```
 
+### From GitHub
+
+You can also install straight from the repository:
+
+```bash
+pi install git:github.com/banh-me/pi-vim
+```
+
+Without a ref this installs the latest commit on **`main`** — i.e. unreleased work, not the
+latest npm release. To pin a release or commit, add a tag or SHA:
+
+```bash
+pi install git:github.com/banh-me/pi-vim@v0.1.6
+pi install git:github.com/banh-me/pi-vim@<commit-sha>
+```
+
+A git install stays on its configured ref; run `pi update --extensions` to reconcile it with the
+current `main` (or the pinned ref).
+
 Restart pi after install. Toggle at runtime with `/vim` (or a `toggle_key` shortcut — see below).
 
 ## Configuration
