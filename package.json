@@ -1,6 +1,6 @@
 {
   "name": "@banh-me/pi-vim",
-  "version": "0.1.6",
+  "version": "0.1.7",
   "description": "Vim modal editing for the pi coding agent prompt: INSERT/NORMAL/REPLACE/VISUAL/V-LINE with operators, text objects, registers, undo/redo, dot-repeat, OS-clipboard mirror and configurable escape sequences.",
   "keywords": [
     "pi-package",

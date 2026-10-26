@@ -32,7 +32,7 @@ Without a ref this installs the latest commit on **`main`** — i.e. unreleased 
 latest npm release. To pin a release or commit, add a tag or SHA:
 
 ```bash
-pi install git:github.com/banh-me/pi-vim@v0.1.6
+pi install git:github.com/banh-me/pi-vim@v0.1.7
 pi install git:github.com/banh-me/pi-vim@<commit-sha>
 ```
 
